@@ -106,6 +106,16 @@ VITE_API_URL=http://localhost:8080
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | GET | `/auth/me` | Usuario autenticado |
+| GET | `/api/tasks` | Lista de tareas (filtros: estado, prioridad, etiquetas) |
+| POST | `/api/tasks` | Crear tarea |
+| GET | `/api/tasks/{id}` | Obtener tarea |
+| PUT | `/api/tasks/{id}` | Actualizar tarea |
+| DELETE | `/api/tasks/{id}` | Eliminar tarea |
+| POST | `/api/pomodoros/complete` | Registrar fin de sesión Pomodoro |
+| GET | `/api/stats/weekly` | Pomodoros por día de la semana |
+| GET | `/api/stats/monthly` | Pomodoros por día del mes |
+| GET | `/api/stats/top-tasks` | Tareas con más pomodoros |
+| GET | `/api/stats/top-tags` | Etiquetas con más pomodoros |
 
 ### Ejemplo de registro
 
@@ -122,6 +132,10 @@ curl -X POST http://localhost:8080/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"user@ejemplo.com","password":"password123"}'
 ```
+
+### Colección Postman
+
+Importa `postman/Focus-API.postman_collection.json` en Postman para probar todos los endpoints. Ejecuta primero **Login** para que el token se guarde automáticamente en las variables de la colección.
 
 ---
 
@@ -141,7 +155,7 @@ El desarrollo sigue un plan en 5 pasos (ver [roadmap.md](roadmap.md)):
 
 1. **Paso 1** – Backend base (entidades, repositorios, estructura MVC) ✅
 2. **Paso 2** – Autenticación JWT (login, registro, rutas protegidas) ✅
-3. **Paso 3** – API REST de tareas, pomodoros y estadísticas
+3. **Paso 3** – API REST de tareas, pomodoros y estadísticas ✅
 4. **Paso 4** – Integración frontend-backend
 5. **Paso 5** – Despliegue (Easypanel, VPS)
 

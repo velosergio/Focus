@@ -1,0 +1,305 @@
+{
+	"info": {
+		"_postman_id": "focus-api-collection",
+		"name": "Focus API",
+		"description": "Colección para la API REST de Focus - Gestión de tareas con técnica Pomodoro",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "token",
+			"value": ""
+		}
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Usuario Prueba\",\n  \"email\": \"usuario@ejemplo.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": "{{baseUrl}}/auth/register"
+					}
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const json = pm.response.json();",
+									"    if (json.accessToken) {",
+									"        pm.collectionVariables.set('token', json.accessToken);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"usuario@ejemplo.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": "{{baseUrl}}/auth/login"
+					}
+				},
+				{
+					"name": "Me",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": "{{baseUrl}}/auth/me"
+					}
+				}
+			]
+		},
+		{
+			"name": "Tasks",
+			"item": [
+				{
+					"name": "List Tasks",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tasks"]
+						}
+					}
+				},
+				{
+					"name": "List Tasks (with filters)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks?estado=PENDIENTE&prioridad=ALTA&etiquetas=urgente,trabajo",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tasks"],
+							"query": [
+								{"key": "estado", "value": "PENDIENTE"},
+								{"key": "prioridad", "value": "ALTA"},
+								{"key": "etiquetas", "value": "urgente,trabajo"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"Nueva tarea de prueba\",\n  \"descripcion\": \"Descripción opcional de la tarea\",\n  \"prioridad\": \"ALTA\",\n  \"etiquetas\": [\"urgente\", \"trabajo\"],\n  \"fechaLimite\": \"2025-12-31\",\n  \"estimacionPomodoros\": 4\n}"
+						},
+						"url": "{{baseUrl}}/api/tasks"
+					}
+				},
+				{
+					"name": "Get Task by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tasks", "1"]
+						}
+					}
+				},
+				{
+					"name": "Update Task",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"Tarea actualizada\",\n  \"descripcion\": \"Descripción modificada\",\n  \"prioridad\": \"MEDIA\",\n  \"etiquetas\": [\"actualizado\"],\n  \"estado\": \"EN_PROGRESO\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tasks", "1"]
+						}
+					}
+				},
+				{
+					"name": "Delete Task",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "tasks", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Pomodoros",
+			"item": [
+				{
+					"name": "Complete Pomodoro",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"taskId\": 1,\n  \"tipo\": \"TRABAJO\"\n}"
+						},
+						"url": "{{baseUrl}}/api/pomodoros/complete"
+					}
+				}
+			]
+		},
+		{
+			"name": "Stats",
+			"item": [
+				{
+					"name": "Weekly Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/stats/weekly"
+					}
+				},
+				{
+					"name": "Monthly Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": "{{baseUrl}}/api/stats/monthly"
+					}
+				},
+				{
+					"name": "Top Tasks",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/stats/top-tasks?limit=5",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stats", "top-tasks"],
+							"query": [{"key": "limit", "value": "5"}]
+						}
+					}
+				},
+				{
+					"name": "Top Tags",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/stats/top-tags?limit=5",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stats", "top-tags"],
+							"query": [{"key": "limit", "value": "5"}]
+						}
+					}
+				}
+			]
+		}
+	]
+}

@@ -93,3 +93,50 @@ Registro de cambios implementados según el roadmap del proyecto.
 - **JPA open-in-view**: `spring.jpa.open-in-view=false` para evitar el aviso de consultas durante el renderizado.
 - **Ruta raíz pública**: `WebSecurityCustomizer` para ignorar `/` y `/index.html`; endpoint `GET /` en `HealthController` que devuelve información básica de la API.
 - **JwtAuthenticationFilter**: Eliminadas anotaciones `@NonNull` deprecadas.
+
+---
+
+## Paso 3 – API REST de tareas, pomodoros y estadísticas
+
+### API de tareas
+
+- **DTOs de request**: `CreateTaskRequest`, `UpdateTaskRequest` con Bean Validation.
+- **TareaRepository**: Extendido con `JpaSpecificationExecutor` para filtros dinámicos.
+- **TareaSpecification**: Filtros por usuario, estado, prioridad y etiquetas.
+- **TareaService**: Métodos `create`, `update`, `delete` con verificación de pertenencia; `findByUsuarioWithFilters`.
+- **TaskController** (`/api/tasks`):
+  - `GET /`: Lista de tareas con filtros opcionales (estado, prioridad, etiquetas).
+  - `POST /`: Crear tarea.
+  - `GET /{id}`: Obtener tarea.
+  - `PUT /{id}`: Actualizar tarea.
+  - `DELETE /{id}`: Eliminar tarea.
+- **Excepciones**: `TareaNotFoundException` (404), `ForbiddenException` (403).
+- **GlobalExceptionHandler**: Handlers para `MethodArgumentNotValidException` y excepciones de negocio.
+
+### Integración con sesiones Pomodoro (Factory)
+
+- **SesionPomodoroFactory**: Crea sesiones según tipo (TRABAJO 25 min, DESCANSO_CORTO 5 min, DESCANSO_LARGO 15 min).
+- **CompletePomodoroRequest**: DTO con `taskId`, `tipo`, `fechaInicio` opcional.
+- **PomodoroService** / **PomodoroServiceImpl**: `completeSession` registra la sesión e incrementa `pomodorosCompletados` si es TRABAJO.
+- **PomodoroController** (`/api/pomodoros`): `POST /complete` para registrar fin de sesión.
+
+### API de estadísticas
+
+- **DTOs**: `StatsDataPoint`, `TopTaskDto`, `TopTagDto`.
+- **StatsService** / **StatsServiceImpl**: `getWeeklyStats`, `getMonthlyStats`, `getTopTasks`, `getTopTags`.
+- **StatsController** (`/api/stats`):
+  - `GET /weekly`: Pomodoros por día de la semana actual.
+  - `GET /monthly`: Pomodoros por día del mes actual.
+  - `GET /top-tasks`: Tareas con más pomodoros (query param `limit`).
+  - `GET /top-tags`: Etiquetas con más pomodoros (query param `limit`).
+- **SesionPomodoroRepository**: Método `findByTareaUsuarioAndTipoAndFechaFinBetween` para estadísticas.
+- **TareaRepository**: Método `findByUsuarioOrderByPomodorosCompletadosDesc` para top tasks.
+
+### Colección Postman
+
+- **postman/Focus-API.postman_collection.json**: Colección con Auth, Tasks, Pomodoros y Stats. Variables `baseUrl` y `token`; script en Login para guardar el token automáticamente.
+
+### Resultado
+
+- API REST completa para tareas, registro de pomodoros y estadísticas.
+- Lista para ser consumida por el frontend en el Paso 4.
