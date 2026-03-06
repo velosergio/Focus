@@ -8,9 +8,10 @@ group = 'com.focus'
 version = '0.0.1-SNAPSHOT'
 description = 'Focus - Gestión de tareas con técnica Pomodoro'
 
+def javaVersion = project.findProperty('javaVersion') as Integer ?: 25
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(25)
+		languageVersion = JavaLanguageVersion.of(javaVersion)
 	}
 }
 

@@ -1,0 +1,27 @@
+# Git y IDE
+.git
+.gitignore
+.idea
+*.iml
+.vscode
+
+# Build y dependencias
+frontend/node_modules
+frontend/dist
+build
+!gradle/wrapper/gradle-wrapper.jar
+
+# Logs y temporales
+*.log
+.DS_Store
+
+# Documentación (opcional, no necesario para build)
+*.md
+!README.md
+
+# Postman y otros
+postman
+easypanel.log
+.env
+.env.*
+!.env.example

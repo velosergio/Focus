@@ -19,5 +19,5 @@ cmds = [
 cmd = "java $JAVA_OPTS -jar -Dserver.port=$PORT -Dspring.profiles.active=prod $(ls -1 build/libs/*.jar | grep -v plain)"
 
 [variables]
-# JDK 21 (compatible con Spring Boot 4; 25 puede no estar en nixpacks)
+# JDK 21: requerido para Gradle 8 (Nixpacks no soporta Gradle 9) y Spring Boot 4
 NIXPACKS_JDK_VERSION = "21"

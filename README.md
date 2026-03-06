@@ -147,10 +147,13 @@ Importa `postman/Focus-API.postman_collection.json` en Postman para probar todos
 
 ## Despliegue en Easypanel (VPS)
 
-El proyecto incluye `nixpacks.toml` para construir y desplegar con Nixpacks en Easypanel.
+El proyecto incluye dos opciones de build en Easypanel:
 
-1. Crear un servicio desde el repositorio y elegir **Nixpacks** como builder.
-2. Configurar **variables de entorno** en Easypanel (perfil producción):
+- **Dockerfile** (recomendado): Usar **Dockerfile** como tipo de build. Construye el frontend y el backend con Java 21 y genera un JAR ejecutable. No depende de la versión de Gradle que soporte Nixpacks.
+- **Nixpacks**: `nixpacks.toml` está preparado para Nixpacks; si aparece *Unsupported Gradle version: 9*, usar el Dockerfile en su lugar.
+
+1. Crear un servicio desde el repositorio y elegir **Dockerfile** (o Nixpacks si tu instancia lo soporta).
+2. Configurar **variables de entorno** en Easypanel (perfil producción). Plantilla de referencia: [.env.example](.env.example).
 
    | Variable | Descripción |
    |----------|-------------|
