@@ -166,7 +166,7 @@ El proyecto incluye dos opciones de build en Easypanel:
 
 3. **Health check**: en Easypanel, configurar la ruta de comprobación como `GET /actuator/health`. El servicio debe responder 200 cuando esté listo.
 
-4. **Base de datos**: crear la base `focus` en MySQL y asegurar que el VPS puede conectarse (puerto 3306, usuario/contraseña correctos).
+4. **Base de datos**: crear la base `focus` en MySQL y asegurar que el VPS puede conectarse (puerto 3306, usuario/contraseña correctos). **Primera vez**: añadir la variable `SPRING_JPA_HIBERNATE_DDL_AUTO=update` para que Hibernate cree las tablas; después del primer arranque puedes quitarla o poner `validate`.
 
 ---
 
