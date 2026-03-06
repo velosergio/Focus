@@ -3,7 +3,8 @@
  * Los endpoints son configurables para facilitar la conexión con el backend real.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+// Vacío = mismo origen (cuando el backend sirve el frontend). En dev con Vite aparte, usar VITE_API_URL=http://localhost:8080
+const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
 function getAuthHeaders(): Record<string, string> {
   const token = localStorage.getItem("focus_token");
@@ -28,5 +29,8 @@ export async function apiRequest<T>(
     throw new Error(error.message || `Error ${response.status}`);
   }
 
+  if (response.status === 204 || response.headers.get("content-length") === "0") {
+    return undefined as T;
+  }
   return response.json();
 }

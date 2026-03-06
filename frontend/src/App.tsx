@@ -29,6 +29,19 @@ const AppContent = () => {
         onLoginClick={() => setAuthOpen(true)}
         onLogout={auth.logout}
       />
+      {!auth.isAuthenticated && (
+        <div className="bg-primary/10 border-b border-primary/20 px-4 py-2 text-center text-sm text-foreground">
+          Usas Focus en modo invitado.{" "}
+          <button
+            type="button"
+            onClick={() => setAuthOpen(true)}
+            className="font-medium text-primary hover:underline"
+          >
+            Crea una cuenta
+          </button>{" "}
+          para guardar tu progreso en todos los dispositivos.
+        </div>
+      )}
       <main className="min-h-[calc(100vh-3.5rem)]">
         <Routes>
           <Route path="/" element={<Index />} />

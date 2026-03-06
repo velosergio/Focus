@@ -140,3 +140,38 @@ Registro de cambios implementados según el roadmap del proyecto.
 
 - API REST completa para tareas, registro de pomodoros y estadísticas.
 - Lista para ser consumida por el frontend en el Paso 4.
+
+---
+
+## Paso 4 – Integración del frontend con el backend
+
+### 4.1 Capa de servicios
+
+- **api.ts**: URL base `VITE_API_URL` (por defecto `http://localhost:8080`), cabecera `Authorization: Bearer` con token en `localStorage` (`focus_token`). Soporte para respuestas 204 sin cuerpo.
+- **authService**: `login`, `register` (mapeo de `accessToken` a token), `getProfile` (`/auth/me`). Respuesta del backend adaptada a `{ token, usuario }`.
+- **taskService**: `getTasks` (con filtros opcionales), `createTask`, `getTask`, `updateTask` (PUT), `deleteTask`, `setTaskCompleted`. Mapeo entre DTOs del backend (prioridad/estado en mayúsculas) y tipos frontend (minúsculas).
+- **statsService**: `getWeeklyStats`, `getMonthlyStats`, `getTopTasks`, `getTopTags`.
+- **pomodoroService**: `completeSession` (`POST /api/pomodoros/complete` con `taskId` y `tipo`).
+- **.env.example**: `VITE_API_URL=http://localhost:8080`.
+
+### 4.2 Vistas principales
+
+- **Home (`/`)**: Formulario de tareas llama a `taskService.createTask` cuando hay usuario autenticado; listado con `taskService.getTasks` y mutaciones según auth. Temporizador: al completar un Pomodoro de trabajo, si hay usuario se llama a `pomodoroService.completeSession` y se hace `refetch` de tareas; en modo invitado se mantiene `incrementarPomodoro` local. Toasts como observadores del evento “Pomodoro completado”.
+- **Estadísticas (`/estadisticas`)**: Si el usuario está autenticado se usan `statsService.getWeeklyStats`, `getMonthlyStats`, `getTopTasks`, `getTopTags`; si no, se mantiene el cálculo local a partir de `useTasks().todasLasTareas`.
+
+### 4.3 Autenticación en la UI
+
+- **useAuth**: Conectado al backend real (`authService.login`, `authService.register`). Almacenamiento de token y usuario en `localStorage`; `logout` limpia ambos.
+- **Header**: Muestra nombre de usuario y botón Salir cuando está autenticado; botón Entrar abre el modal.
+- **AuthModal**: Formularios de login y registro llaman a `useAuth().login` y `useAuth().register`.
+- **Banner**: Cuando no hay sesión, se muestra un aviso bajo el header invitando a crear cuenta para guardar el progreso, con enlace que abre el modal de auth.
+
+### 4.4 Pruebas y pulido
+
+- **usePomodoroTimer.test.ts**: Pruebas de estado inicial, iniciar y avance del tiempo, pausar y comprobar que el tiempo no avanza.
+- **useTasks.test.ts**: Pruebas de agregar tarea (modo invitado), completar tarea e incrementar pomodoro, con `localStorage` limpio en cada test.
+
+### Resultado
+
+- Frontend y backend integrados: registro, login, CRUD de tareas, registro de pomodoros y estadísticas funcionando de extremo a extremo.
+- Modo invitado con datos en `localStorage` y banner para invitar a registrarse.

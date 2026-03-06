@@ -37,3 +37,14 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// Copia el frontend construido (frontend/dist) para que el backend sirva la SPA en /
+tasks.register('copyFrontend', Copy) {
+	onlyIf { file("frontend/dist").exists() }
+	from("frontend/dist")
+	into("${layout.buildDirectory.get()}/resources/main/static")
+}
+
+processResources {
+	dependsOn copyFrontend
+}

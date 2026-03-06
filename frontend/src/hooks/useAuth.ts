@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
+import { authService } from "@/services/authService";
 import type { AuthState, LoginInput, RegistroInput, Usuario } from "@/types/auth";
 
 const TOKEN_KEY = "focus_token";
@@ -9,15 +10,16 @@ function loadAuthState(): AuthState {
     const token = localStorage.getItem(TOKEN_KEY);
     const user = localStorage.getItem(USER_KEY);
     if (token && user) {
-      return { token, usuario: JSON.parse(user), isAuthenticated: true };
+      return { token, usuario: JSON.parse(user) as Usuario, isAuthenticated: true };
     }
-  } catch {}
+  } catch {
+    // localStorage no disponible o datos inválidos
+  }
   return { token: null, usuario: null, isAuthenticated: false };
 }
 
 /**
- * Hook para gestionar el estado de autenticación.
- * Simula las llamadas al backend; las funciones de servicio se conectarán al API real.
+ * Hook para gestionar el estado de autenticación con el backend.
  */
 export function useAuth() {
   const [authState, setAuthState] = useState<AuthState>(loadAuthState);
@@ -30,13 +32,11 @@ export function useAuth() {
   }, []);
 
   const login = useCallback(
-    async (_data: LoginInput) => {
+    async (data: LoginInput) => {
       setIsLoading(true);
       try {
-        // En producción: const res = await authService.login(data);
-        // Simulación para desarrollo sin backend:
-        const usuario: Usuario = { id: "1", nombre: "Usuario Demo", email: _data.email };
-        guardarSesion("demo_token", usuario);
+        const res = await authService.login(data);
+        guardarSesion(res.token, res.usuario);
       } finally {
         setIsLoading(false);
       }
@@ -45,11 +45,15 @@ export function useAuth() {
   );
 
   const register = useCallback(
-    async (_data: RegistroInput) => {
+    async (data: RegistroInput) => {
       setIsLoading(true);
       try {
-        const usuario: Usuario = { id: "1", nombre: _data.nombre, email: _data.email };
-        guardarSesion("demo_token", usuario);
+        const res = await authService.register({
+          nombre: data.nombre,
+          email: data.email,
+          password: data.password,
+        });
+        guardarSesion(res.token, res.usuario);
       } finally {
         setIsLoading(false);
       }

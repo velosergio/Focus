@@ -4,16 +4,31 @@ import { TaskForm } from "@/components/TaskForm";
 import { TaskList } from "@/components/TaskList";
 import { usePomodoroTimer } from "@/hooks/usePomodoroTimer";
 import { useTasks } from "@/hooks/useTasks";
+import { useAuth } from "@/hooks/useAuth";
+import { pomodoroService } from "@/services/pomodoroService";
 import { toast } from "sonner";
 
 const Index = () => {
+  const { isAuthenticated } = useAuth();
   const tasks = useTasks();
 
-  const pomodoro = usePomodoroTimer(() => {
-    // Callback cuando se completa un pomodoro
-    if (tasks.tareaActivaId) {
-      tasks.incrementarPomodoro(tasks.tareaActivaId);
-      toast.success(`Pomodoro añadido a "${tasks.tareaActiva?.titulo}"`);
+  const pomodoro = usePomodoroTimer(async () => {
+    if (tasks.tareaActivaId && tasks.tareaActiva) {
+      if (isAuthenticated) {
+        try {
+          await pomodoroService.completeSession({
+            taskId: Number(tasks.tareaActivaId),
+            tipo: "TRABAJO",
+          });
+          await tasks.refetch();
+          toast.success(`Pomodoro registrado en "${tasks.tareaActiva.titulo}"`);
+        } catch {
+          toast.error("No se pudo registrar el pomodoro");
+        }
+      } else {
+        tasks.incrementarPomodoro(tasks.tareaActivaId);
+        toast.success(`Pomodoro añadido a "${tasks.tareaActiva.titulo}"`);
+      }
     }
   });
 
@@ -38,31 +53,39 @@ const Index = () => {
 
       {/* Nueva tarea */}
       <section>
-        <TaskForm onAgregar={(input) => {
-          tasks.agregarTarea(input);
-          toast.success("Tarea agregada");
-        }} />
+        <TaskForm
+          onAgregar={(input) => {
+            tasks.agregarTarea(input).then(
+              () => toast.success("Tarea agregada"),
+              () => toast.error("Error al crear la tarea")
+            );
+          }}
+        />
       </section>
 
       {/* Lista de tareas */}
       <section>
         <h2 className="font-display font-semibold text-lg mb-3">Mis tareas</h2>
-        <TaskList
-          tareas={tasks.tareas}
-          tareaActivaId={tasks.tareaActivaId}
-          filtroEstado={tasks.filtroEstado}
-          filtroEtiqueta={tasks.filtroEtiqueta}
-          ordenarPor={tasks.ordenarPor}
-          todasLasEtiquetas={tasks.todasLasEtiquetas}
-          onSetFiltroEstado={tasks.setFiltroEstado}
-          onSetFiltroEtiqueta={tasks.setFiltroEtiqueta}
-          onSetOrdenarPor={tasks.setOrdenarPor}
-          onSeleccionar={(id) =>
-            tasks.setTareaActivaId(tasks.tareaActivaId === id ? null : id)
-          }
-          onCompletar={tasks.completarTarea}
-          onEliminar={tasks.eliminarTarea}
-        />
+        {tasks.loading ? (
+          <p className="text-sm text-muted-foreground py-4">Cargando tareas...</p>
+        ) : (
+          <TaskList
+            tareas={tasks.tareas}
+            tareaActivaId={tasks.tareaActivaId}
+            filtroEstado={tasks.filtroEstado}
+            filtroEtiqueta={tasks.filtroEtiqueta}
+            ordenarPor={tasks.ordenarPor}
+            todasLasEtiquetas={tasks.todasLasEtiquetas}
+            onSetFiltroEstado={tasks.setFiltroEstado}
+            onSetFiltroEtiqueta={tasks.setFiltroEtiqueta}
+            onSetOrdenarPor={tasks.setOrdenarPor}
+            onSeleccionar={(id) =>
+              tasks.setTareaActivaId(tasks.tareaActivaId === id ? null : id)
+            }
+            onCompletar={tasks.completarTarea}
+            onEliminar={tasks.eliminarTarea}
+          />
+        )}
       </section>
     </div>
   );

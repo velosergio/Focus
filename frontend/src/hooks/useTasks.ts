@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { taskService } from "@/services/taskService";
 import type { Tarea, CrearTareaInput, EstadoTarea, Prioridad } from "@/types/task";
 
 const STORAGE_KEY = "focus_tareas";
@@ -7,7 +9,7 @@ function generarId(): string {
   return crypto.randomUUID();
 }
 
-function cargarTareas(): Tarea[] {
+function cargarTareasLocales(): Tarea[] {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     return data ? JSON.parse(data) : [];
@@ -16,66 +18,128 @@ function cargarTareas(): Tarea[] {
   }
 }
 
-function guardarTareas(tareas: Tarea[]) {
+function guardarTareasLocales(tareas: Tarea[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tareas));
 }
 
 /**
- * Hook para gestionar tareas con persistencia en localStorage.
- * Soporta CRUD, filtrado y ordenación.
+ * Hook para gestionar tareas: con backend si hay usuario autenticado, o localStorage en modo invitado.
  */
 export function useTasks() {
-  const [tareas, setTareas] = useState<Tarea[]>(cargarTareas);
+  const { isAuthenticated } = useAuth();
+  const [tareas, setTareas] = useState<Tarea[]>([]);
   const [tareaActivaId, setTareaActivaId] = useState<string | null>(null);
   const [filtroEstado, setFiltroEstado] = useState<EstadoTarea | "todas">("todas");
   const [filtroEtiqueta, setFiltroEtiqueta] = useState<string | null>(null);
   const [ordenarPor, setOrdenarPor] = useState<"prioridad" | "fechaLimite" | "recientes">("recientes");
+  const [loading, setLoading] = useState(false);
+
+  const refetch = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setLoading(true);
+    try {
+      const list = await taskService.getTasks();
+      setTareas(list);
+    } catch {
+      setTareas([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    guardarTareas(tareas);
-  }, [tareas]);
+    if (isAuthenticated) {
+      refetch();
+    } else {
+      setTareas(cargarTareasLocales());
+    }
+  }, [isAuthenticated, refetch]);
 
-  const agregarTarea = useCallback((input: CrearTareaInput) => {
-    const ahora = new Date().toISOString();
-    const nueva: Tarea = {
-      id: generarId(),
-      titulo: input.titulo,
-      descripcion: input.descripcion || "",
-      prioridad: input.prioridad || "media",
-      etiquetas: input.etiquetas || [],
-      fechaLimite: input.fechaLimite,
-      estimacionPomodoros: input.estimacionPomodoros || 1,
-      pomodorosCompletados: 0,
-      estado: "pendiente",
-      creadaEn: ahora,
-      actualizadaEn: ahora,
-    };
-    setTareas((prev) => [nueva, ...prev]);
-    return nueva;
-  }, []);
+  useEffect(() => {
+    if (!isAuthenticated && tareas.length >= 0) {
+      guardarTareasLocales(tareas);
+    }
+  }, [isAuthenticated, tareas]);
 
-  const editarTarea = useCallback((id: string, cambios: Partial<Tarea>) => {
-    setTareas((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, ...cambios, actualizadaEn: new Date().toISOString() } : t
-      )
-    );
-  }, []);
+  const agregarTarea = useCallback(
+    async (input: CrearTareaInput) => {
+      if (isAuthenticated) {
+        const nueva = await taskService.createTask(input);
+        setTareas((prev) => [nueva, ...prev]);
+        return nueva;
+      }
+      const ahora = new Date().toISOString();
+      const nueva: Tarea = {
+        id: generarId(),
+        titulo: input.titulo,
+        descripcion: input.descripcion || "",
+        prioridad: input.prioridad || "media",
+        etiquetas: input.etiquetas || [],
+        fechaLimite: input.fechaLimite,
+        estimacionPomodoros: input.estimacionPomodoros || 1,
+        pomodorosCompletados: 0,
+        estado: "pendiente",
+        creadaEn: ahora,
+        actualizadaEn: ahora,
+      };
+      setTareas((prev) => [nueva, ...prev]);
+      return nueva;
+    },
+    [isAuthenticated]
+  );
 
-  const eliminarTarea = useCallback((id: string) => {
-    setTareas((prev) => prev.filter((t) => t.id !== id));
-    setTareaActivaId((prev) => (prev === id ? null : prev));
-  }, []);
+  const editarTarea = useCallback(
+    async (id: string, cambios: Partial<Tarea>) => {
+      if (isAuthenticated) {
+        const actualizada = await taskService.updateTask(id, cambios);
+        setTareas((prev) => prev.map((t) => (t.id === id ? actualizada : t)));
+        return;
+      }
+      setTareas((prev) =>
+        prev.map((t) =>
+          t.id === id ? { ...t, ...cambios, actualizadaEn: new Date().toISOString() } : t
+        )
+      );
+    },
+    [isAuthenticated]
+  );
 
-  const completarTarea = useCallback((id: string) => {
-    setTareas((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? { ...t, estado: t.estado === "completada" ? "pendiente" : "completada", actualizadaEn: new Date().toISOString() }
-          : t
-      )
-    );
-  }, []);
+  const eliminarTarea = useCallback(
+    async (id: string) => {
+      if (isAuthenticated) {
+        await taskService.deleteTask(id);
+        setTareas((prev) => prev.filter((t) => t.id !== id));
+      } else {
+        setTareas((prev) => prev.filter((t) => t.id !== id));
+      }
+      setTareaActivaId((prev) => (prev === id ? null : prev));
+    },
+    [isAuthenticated]
+  );
+
+  const completarTarea = useCallback(
+    async (id: string) => {
+      const t = tareas.find((x) => x.id === id);
+      const completada = t?.estado === "completada";
+      if (isAuthenticated && t) {
+        const actualizada = await taskService.setTaskCompleted(id, !completada);
+        setTareas((prev) => prev.map((x) => (x.id === id ? actualizada : x)));
+      } else {
+        setTareas((prev) =>
+          prev.map((x) =>
+            x.id === id
+              ? {
+                  ...x,
+                  estado: (x.estado === "completada" ? "pendiente" : "completada") as EstadoTarea,
+                  actualizadaEn: new Date().toISOString(),
+                }
+              : x
+          )
+        );
+      }
+    },
+    [isAuthenticated, tareas]
+  );
 
   const incrementarPomodoro = useCallback((id: string) => {
     setTareas((prev) =>
@@ -117,6 +181,8 @@ export function useTasks() {
     eliminarTarea,
     completarTarea,
     incrementarPomodoro,
+    refetch,
+    loading,
     filtroEstado,
     setFiltroEstado,
     filtroEtiqueta,

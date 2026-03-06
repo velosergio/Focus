@@ -9,17 +9,12 @@ import java.util.Map;
 @RestController
 public class HealthController {
 
-    @GetMapping({"/", ""})
-    public ResponseEntity<Map<String, String>> root() {
-        return ResponseEntity.ok(Map.of(
-                "app", "Focus",
-                "status", "running",
-                "docs", "API REST: /auth/register, /auth/login, /health"
-        ));
-    }
-
     @GetMapping("/health")
     public ResponseEntity<Map<String, String>> health() {
-        return ResponseEntity.ok(Map.of("status", "UP"));
+        return ResponseEntity.ok(Map.of(
+                "status", "UP",
+                "app", "Focus",
+                "docs", "API: /auth/register, /auth/login, /api/tasks, /api/stats, /api/pomodoros"
+        ));
     }
 }
