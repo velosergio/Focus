@@ -148,25 +148,20 @@ Resultado de este paso: frontend y backend integrados, con los flujos principale
     - Orígenes permitidos para CORS (dominio del frontend).
     - Logs adecuados (nivel `INFO` o `WARN` en prod).
   - Generar artefacto **Jar** del backend (`./gradlew bootJar`).
-  - Construir el frontend (`npm run build` o equivalente en el proyecto Lovable).
+  - Construir el frontend (`npm run build`) en el archivo de nixpacks.
 
 - **5.2. Despliegue con Easypanel en VPS**
-  - Crear contenedor/app para el backend:
-    - Montar el Jar o la imagen Docker.
-    - Configurar variables de entorno (DB, JWT secret, profiles, etc.).
-  - Servir el frontend (Nginx o servicio estático) apuntando al build de Vite.
-  - Configurar dominio y SSL (Let’s Encrypt) desde Easypanel.
+  - Crear nixpacks.toml con configuración para usar nixpacks para deploy en easypanel
 
 - **5.3. Monitoreo básico y mantenimiento**
   - Habilitar health-checks (por ejemplo `/actuator/health`).
-  - Configurar backups de la base de datos MySQL.
-  - Documentar cómo reiniciar servicios, actualizar la app y aplicar migraciones.
 
 - **5.4. Documentación final**
   - Completar un `README.md` con:
     - Requisitos previos (Java, Node, MySQL).
     - Pasos para levantar el entorno local (backend + frontend).
     - Ejemplos de llamadas a la API (colección de Postman/Insomnia opcional).
+    - Documentar cómo reiniciar servicios, actualizar la app y aplicar migraciones. (README.md)
   - Añadir referencia a este `roadmap.md` como guía de desarrollo.
 
 Resultado de este paso: proyecto **listo para uso académico y desplegado en un VPS** con un flujo de mantenimiento claro.

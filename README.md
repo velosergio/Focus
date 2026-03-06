@@ -35,6 +35,7 @@ Focus/
 │   │   ├── pages/          # Páginas
 │   │   └── services/       # Servicios API
 │   └── package.json
+├── nixpacks.toml           # Build para Easypanel (Nixpacks)
 ├── roadmap.md              # Plan de implementación en 5 pasos
 ├── changenotes.md          # Registro de cambios
 └── focus.md                # Especificación del proyecto
@@ -72,21 +73,25 @@ El backend arranca en **http://localhost:8080**.
 
 Configuración por defecto (XAMPP): `localhost:3306/focus`, usuario `root`, sin contraseña. Editar `src/main/resources/application.properties` si usas otros valores.
 
-### 3. Frontend
+### 3. Frontend (dos opciones)
 
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-El frontend se sirve en **http://localhost:5173** (o el puerto que indique Vite).
-
-Configurar la URL del API en `frontend/.env` o `frontend/.env.local`:
+**Opción A – Desarrollo (frontend y backend por separado)**  
+En `frontend/`: `npm install` y `npm run dev`. La app se sirve en **http://localhost:5173**. Crear `frontend/.env` con:
 
 ```
 VITE_API_URL=http://localhost:8080
 ```
+
+**Opción B – Todo desde el backend (una sola URL)**  
+Construir el frontend y arrancar solo el backend; la raíz del backend sirve la SPA:
+
+```powershell
+cd frontend && npm run build && cd ..
+cd c:\xampp\htdocs\Focus
+.\gradlew.bat bootRun
+```
+
+Abrir **http://localhost:8080/** para usar la aplicación.
 
 ---
 
@@ -96,8 +101,9 @@ VITE_API_URL=http://localhost:8080
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET | `/` | Información básica de la API |
-| GET | `/health` | Estado del servicio |
+| GET | `/` | Aplicación web (SPA) |
+| GET | `/health` | Estado del servicio (resumen) |
+| GET | `/actuator/health` | Health check para monitoreo (Easypanel, etc.) |
 | POST | `/auth/register` | Registro de usuario |
 | POST | `/auth/login` | Login (devuelve JWT) |
 
@@ -139,6 +145,39 @@ Importa `postman/Focus-API.postman_collection.json` en Postman para probar todos
 
 ---
 
+## Despliegue en Easypanel (VPS)
+
+El proyecto incluye `nixpacks.toml` para construir y desplegar con Nixpacks en Easypanel.
+
+1. Crear un servicio desde el repositorio y elegir **Nixpacks** como builder.
+2. Configurar **variables de entorno** en Easypanel (perfil producción):
+
+   | Variable | Descripción |
+   |----------|-------------|
+   | `SPRING_PROFILES_ACTIVE` | `prod` |
+   | `DATABASE_URL` | `jdbc:mysql://host:3306/focus` (o la URL de tu MySQL) |
+   | `DATABASE_USERNAME` | Usuario MySQL |
+   | `DATABASE_PASSWORD` | Contraseña MySQL |
+   | `FOCUS_JWT_SECRET` | Clave secreta JWT (mín. 256 bits) |
+   | `CORS_ALLOWED_ORIGINS` | Opcional: orígenes CORS si el frontend está en otro dominio (vacío = mismo origen) |
+
+3. **Health check**: en Easypanel, configurar la ruta de comprobación como `GET /actuator/health`. El servicio debe responder 200 cuando esté listo.
+
+4. **Base de datos**: crear la base `focus` en MySQL y asegurar que el VPS puede conectarse (puerto 3306, usuario/contraseña correctos).
+
+---
+
+## Mantenimiento y operaciones
+
+- **Reiniciar el servicio**: desde el panel de Easypanel (o del VPS) reiniciar el contenedor del servicio Focus.
+- **Actualizar la aplicación**: hacer pull del código, volver a desplegar en Easypanel (rebuild con Nixpacks). No hace falta tocar MySQL si no cambian las entidades.
+- **Migraciones de base de datos**: en producción se usa `spring.jpa.hibernate.ddl-auto=validate` (solo valida el esquema). Para aplicar cambios de esquema:
+  - Opción 1: en un entorno de staging con `ddl-auto=update` aplicar los cambios y luego exportar/importar o replicar.
+  - Opción 2: ejecutar scripts SQL manualmente sobre la base de datos de producción y después desplegar la nueva versión.
+- **Backups**: configurar copias de seguridad periódicas de la base de datos MySQL en el VPS (cron + mysqldump o herramienta del proveedor).
+
+---
+
 ## Patrones de diseño
 
 El proyecto aplica:
@@ -156,8 +195,8 @@ El desarrollo sigue un plan en 5 pasos (ver [roadmap.md](roadmap.md)):
 1. **Paso 1** – Backend base (entidades, repositorios, estructura MVC) ✅
 2. **Paso 2** – Autenticación JWT (login, registro, rutas protegidas) ✅
 3. **Paso 3** – API REST de tareas, pomodoros y estadísticas ✅
-4. **Paso 4** – Integración frontend-backend
-5. **Paso 5** – Despliegue (Easypanel, VPS)
+4. **Paso 4** – Integración frontend-backend ✅
+5. **Paso 5** – Despliegue (Easypanel, VPS) ✅
 
 ---
 

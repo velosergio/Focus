@@ -1,0 +1,23 @@
+# Build para Easypanel (Nixpacks): Focus - Backend Spring Boot + Frontend React
+# Requiere Node para construir el frontend y Java para el backend.
+
+providers = ["...", "node"]
+
+[phases.setup]
+# Node ya lo aporta el provider "node". Java/Gradle lo aporta el provider por defecto (gradlew).
+
+[phases.build]
+# 1) Construir frontend (genera frontend/dist)
+# 2) Gradle copia frontend a resources y genera el JAR ejecutable
+cmds = [
+  "cd frontend && npm ci && npm run build && cd ..",
+  "./gradlew copyFrontend bootJar -x test --no-daemon"
+]
+
+[start]
+# Perfil producción y puerto desde variable PORT (Easypanel)
+cmd = "java $JAVA_OPTS -jar -Dserver.port=$PORT -Dspring.profiles.active=prod $(ls -1 build/libs/*.jar | grep -v plain)"
+
+[variables]
+# JDK 21 (compatible con Spring Boot 4; 25 puede no estar en nixpacks)
+NIXPACKS_JDK_VERSION = "21"

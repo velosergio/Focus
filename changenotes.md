@@ -175,3 +175,40 @@ Registro de cambios implementados según el roadmap del proyecto.
 
 - Frontend y backend integrados: registro, login, CRUD de tareas, registro de pomodoros y estadísticas funcionando de extremo a extremo.
 - Modo invitado con datos en `localStorage` y banner para invitar a registrarse.
+
+---
+
+## Paso 5 – Preparar despliegue y documentación
+
+### Servir frontend desde el backend (raíz /)
+
+- **WebMvcConfig**: Página de error 404 redirige a `/notFound`; `/notFound` hace `forward:/index.html` para que rutas de la SPA (`/`, `/estadisticas`, etc.) carguen la aplicación.
+- **build.gradle**: Tarea `copyFrontend` copia `frontend/dist` a `build/resources/main/static` (solo si existe); `processResources` depende de ella para que el JAR incluya el frontend construido.
+- **HealthController**: Eliminado el mapeo de `GET /`; la raíz queda para la SPA. Solo `GET /health` con información de app y docs.
+- **SecurityConfig**: Rutas estáticas y SPA permitidas sin auth (`/`, `/index.html`, `/notFound`, `/assets/**`, etc.); solo `/api/**` exige autenticación JWT.
+- **api.ts**: URL base por defecto vacía (mismo origen) cuando el backend sirve el frontend; en desarrollo se usa `VITE_API_URL` en `.env` (p. ej. `http://localhost:8080`).
+
+### Configuración para producción
+
+- **application-prod.properties**: Datasource desde variables de entorno (`DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`), JPA con `ddl-auto=validate` y `show-sql=false`. Propiedad `focus.cors.allowed-origins` desde `CORS_ALLOWED_ORIGINS` (vacío = mismo origen). JWT desde `FOCUS_JWT_SECRET` y `FOCUS_JWT_EXPIRATION_MS`. Logging: `root=WARN`, `com.focus=INFO`, Spring web/security en `WARN`.
+- **CorsConfig**: Bean `CorsConfigurationSource` que aplica orígenes CORS solo si `focus.cors.allowed-origins` está definido; rutas `/api/**` y `/auth/**`. En dev (`application-dev.properties`) orígenes `http://localhost:5173` y `http://localhost:8080`.
+- **application.properties**: Exposición del endpoint de Actuator `health` para dev y prod.
+
+### Monitoreo y health-checks
+
+- **build.gradle**: Dependencia `spring-boot-starter-actuator`.
+- **SecurityConfig**: Rutas `/actuator/health` y `/actuator/health/**` ignoradas por la cadena de seguridad y permitidas sin autenticación para health-checks en Easypanel u otros orquestadores.
+
+### Despliegue con Easypanel (Nixpacks)
+
+- **nixpacks.toml**: Proveedores Java y Node. Fase de build: `npm ci` y `npm run build` en `frontend/`, luego `./gradlew copyFrontend bootJar -x test`. Comando de inicio: `java -jar ... -Dspring.profiles.active=prod -Dserver.port=$PORT`. Variable `NIXPACKS_JDK_VERSION=21` para compatibilidad con Nixpacks.
+
+### Documentación final
+
+- **README.md**: Requisitos previos, configuración rápida con dos opciones de frontend (solo dev o todo desde el backend). Tabla de API actualizada: `/` sirve la SPA, `/actuator/health` para monitoreo. Sección **Despliegue en Easypanel** con variables de entorno (`DATABASE_*`, `FOCUS_JWT_SECRET`, `CORS_ALLOWED_ORIGINS`) y health check `GET /actuator/health`. Sección **Mantenimiento y operaciones**: reinicio del servicio, actualización de la app, migraciones de base de datos (validate en prod, opciones para cambios de esquema) y backups de MySQL. Estructura del proyecto con `nixpacks.toml`. Paso 5 del roadmap marcado como completado.
+
+### Resultado
+
+- Proyecto listo para uso académico y despliegue en VPS con Easypanel.
+- Backend sirve la SPA en `/`; health-checks vía `/actuator/health`.
+- Documentación de despliegue, variables de entorno y mantenimiento en el README.

@@ -32,7 +32,8 @@ public class SecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers(
                 "/", "/index.html", "/notFound",
-                "/assets/**", "/favicon.ico", "/*.js", "/*.css"
+                "/assets/**", "/favicon.ico", "/*.js", "/*.css",
+                "/actuator/health", "/actuator/health/**"
         );
     }
 
@@ -44,6 +45,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )
