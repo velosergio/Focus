@@ -142,8 +142,8 @@ const Estadisticas = () => {
           <CardTitle className="text-sm font-display">Pomodoros esta semana</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-48 min-h-[12rem] w-full" style={{ minWidth: 1 }}>
+            <ResponsiveContainer width="100%" height="100%" minHeight={192}>
               <BarChart data={stats.datosGrafica}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="dia" tick={{ fontSize: 12 }} className="fill-muted-foreground" />
