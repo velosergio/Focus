@@ -9,7 +9,7 @@ Aplicación web para la gestión de tareas mediante la técnica Pomodoro. Permit
 | Capa      | Stack                                                                 |
 |-----------|-----------------------------------------------------------------------|
 | **Backend** | Java 25, Spring Boot 4.1, Spring Data JPA, Spring Security, JWT, MySQL |
-| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, Shadcn UI, React Query      |
+| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS, Shadcn UI, React Query      |
 | **Base de datos** | MySQL 8.0                                                           |
 
 ---

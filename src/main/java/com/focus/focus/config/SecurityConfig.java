@@ -32,7 +32,7 @@ public class SecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring().requestMatchers(
                 "/", "/index.html", "/notFound",
-                "/assets/**", "/favicon.ico", "/*.js", "/*.css",
+                "/assets/**", "/favicon.ico", "/favicon.svg", "/*.js", "/*.css",
                 "/actuator/health", "/actuator/health/**"
         );
     }

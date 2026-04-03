@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header } from "@/components/Header";
+import { SiteFooter } from "@/components/SiteFooter";
 import { AuthModal } from "@/components/AuthModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,7 +20,7 @@ const AppContent = () => {
   const [authOpen, setAuthOpen] = useState(false);
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Header
         theme={theme}
         onToggleTheme={toggleTheme}
@@ -42,13 +42,14 @@ const AppContent = () => {
           para guardar tu progreso en todos los dispositivos.
         </div>
       )}
-      <main className="min-h-[calc(100vh-3.5rem)]">
+      <main className="flex-1">
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/estadisticas" element={<Estadisticas />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+      <SiteFooter />
       <AuthModal
         open={authOpen}
         onClose={() => setAuthOpen(false)}
@@ -56,14 +57,13 @@ const AppContent = () => {
         onRegister={auth.register}
         isLoading={auth.isLoading}
       />
-    </>
+    </div>
   );
 };
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
       <Sonner />
       <BrowserRouter>
         <AppContent />
